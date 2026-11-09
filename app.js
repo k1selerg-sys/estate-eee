@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.classList.add('js');      // сообщаем CSS, что скрипт загружен
 
   /* ---------- защита от встраивания в чужой iframe (clickjacking) ----------
      Примечание: заголовок frame-ancestors в <meta> не работает, его нужно отдавать HTTP-заголовком сервера. */
@@ -11,22 +11,6 @@
     try { window.top.location = window.location.href; } catch (e) { /* чужой origin — страница остаётся скрытой */ }
     return;
   }
-
-  /* ---------- первый экран: анимация фото стартует после декодирования картинки ---------- */
-  (function () {
-    const fr = document.querySelector('.photo-frame');
-    const img = fr && fr.querySelector('img');
-    if (!img) return;
-    let started = false, rafId = 0;
-    const go = () => {
-      if (started) return;
-      started = true;
-      rafId = requestAnimationFrame(() => fr.classList.add('go'));
-    };
-    (img.decode ? img.decode().catch(() => {}) : Promise.resolve()).then(go);
-    const timer = setTimeout(go, 1200);     // страховка
-    img.addEventListener('animationend', () => fr.classList.add('done'), { once: true });
-  })();
 
   /* ---------- правовая информация: окна по клику на слова в футере ---------- */
   (function () {
@@ -48,6 +32,42 @@
     });
     addEventListener('hashchange', fromHash);
     fromHash();
+  })();
+
+  /* ---------- длинные отзывы: свернуть / читать полностью ---------- */
+  (function () {
+    const cards = [...document.querySelectorAll('.review')];
+    if (!cards.length) return;
+    cards.forEach(card => {
+      const quote = card.querySelector('blockquote');
+      if (!quote) return;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'more';
+      btn.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      btn.textContent = 'Читать полностью';
+      quote.after(btn);
+      card.classList.add('clamp');
+      btn.addEventListener('click', () => {
+        const open = card.classList.toggle('open');
+        card.classList.toggle('clamp', !open);
+        btn.setAttribute('aria-expanded', String(open));
+        btn.textContent = open ? 'Свернуть' : 'Читать полностью';
+      });
+    });
+    // показываем кнопку только там, где текст действительно обрезан
+    function measure() {
+      cards.forEach(card => {
+        const p = card.querySelector('blockquote p'), btn = card.querySelector('.more');
+        if (!p || !btn || card.classList.contains('open')) return;
+        btn.hidden = !(p.scrollHeight > p.clientHeight + 1);
+      });
+    }
+    measure();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    let t = 0;
+    addEventListener('resize', () => { clearTimeout(t); t = setTimeout(measure, 150); });
   })();
 
   /* ---------- появление блоков при прокрутке ---------- */
@@ -83,51 +103,5 @@
       });
     }, { threshold: 0.35 });
     document.querySelectorAll('#services,#about,#reviews,#contact').forEach(s => spy.observe(s));
-  })();
-
-  /* ---------- ветер: хаотичные скруглённые полоски пролетают по фону при загрузке ---------- */
-  (function () {
-    const cv = document.getElementById('wind');
-    if (!cv) return;
-    if (reduceMotion) { cv.remove(); return; }
-    const ctx = cv.getContext('2d');
-    if (!ctx) { cv.remove(); return; }
-    const dpr = Math.min(devicePixelRatio || 1, 2);
-    const W = innerWidth, H = innerHeight;
-    cv.width = W * dpr; cv.height = H * dpr; ctx.scale(dpr, dpr);
-    const rnd = (a, b) => a + Math.random() * (b - a);
-    const streaks = Array.from({ length: 38 }, () => ({
-      y: rnd(-.04, 1.04) * H, len: rnd(180, 560), w: rnd(2.5, 10), delay: rnd(.15, 2.0), dur: rnd(1.7, 3.0),
-      amp: rnd(8, 52), fr: rnd(.003, .011), ph: rnd(0, 6.28), tilt: rnd(-.24, .16), a: rnd(.12, .34),
-      c: Math.random() < .7 ? '216,20,31' : '244,98,108'
-    }));
-    const t0 = performance.now();
-    let rafId = 0;
-    function frame(now) {
-      const t = (now - t0) / 1000;
-      ctx.clearRect(0, 0, W, H);
-      let alive = false;
-      for (const s of streaks) {
-        const p = (t - s.delay) / s.dur;
-        if (p >= 1) continue;
-        alive = true;
-        if (p <= 0) continue;
-        const e = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;   // плавный разгон и торможение
-        const hx = -s.len * .3 + e * (W + s.len * 1.6), tx = hx - s.len;
-        const env = Math.pow(Math.sin(Math.PI * p), .55);
-        const yAt = x => s.y + x * s.tilt + Math.sin(x * s.fr + s.ph + p * 3) * s.amp;
-        const g = ctx.createLinearGradient(tx, yAt(tx), hx, yAt(hx));
-        g.addColorStop(0, 'rgba(' + s.c + ',0)');
-        g.addColorStop(.7, 'rgba(' + s.c + ',' + (s.a * env * .8) + ')');
-        g.addColorStop(1, 'rgba(' + s.c + ',' + (s.a * env) + ')');
-        ctx.strokeStyle = g; ctx.lineWidth = s.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        ctx.beginPath();
-        for (let x = tx; x <= hx; x += 14) { const y = yAt(x); x === tx ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
-        ctx.lineTo(hx, yAt(hx));
-        ctx.stroke();
-      }
-      if (alive) rafId = requestAnimationFrame(frame); else cv.remove();   // по окончании холст удаляется
-    }
-    rafId = requestAnimationFrame(frame);
   })();
 })();
