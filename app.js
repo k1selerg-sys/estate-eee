@@ -34,6 +34,32 @@
     fromHash();
   })();
 
+  /* ---------- переключатель светлой / тёмной темы ---------- */
+  (function () {
+    const root = document.documentElement, btn = document.getElementById('theme');
+    if (!btn) return;
+    const KEY = 'theme';
+    const read = () => { try { return localStorage.getItem(KEY); } catch (e) { return null; } };
+    const write = v => { try { localStorage.setItem(KEY, v); } catch (e) { /* хранилище недоступно — тема просто не запомнится */ } };
+    function apply(mode) {
+      root.dataset.theme = mode;
+      const dark = mode === 'dark';
+      btn.setAttribute('aria-pressed', String(dark));
+      btn.setAttribute('aria-label', dark ? 'Включить светлую тему' : 'Включить тёмную тему');
+      btn.title = dark ? 'Светлая тема' : 'Тёмная тема';
+    }
+    apply(read() === 'dark' ? 'dark' : 'light');
+    let t = 0;
+    btn.addEventListener('click', () => {
+      const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      root.classList.add('theme-anim');
+      apply(next);
+      write(next);
+      clearTimeout(t);
+      t = setTimeout(() => root.classList.remove('theme-anim'), 450);
+    });
+  })();
+
   /* ---------- длинные отзывы: свернуть / читать полностью ---------- */
   (function () {
     const cards = [...document.querySelectorAll('.review')];

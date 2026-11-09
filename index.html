@@ -42,6 +42,22 @@
   @keyframes dotPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
 
   /* ===== шапка ===== */
+  /* ===== тёмная тема ===== */
+  html[data-theme="dark"]{color-scheme:dark;--red:#E5343F;--red-soft:rgba(229,52,63,.16);--ink:#ECECEE;--white:#1A1B1F;--line:#2D2E34;--charcoal:#202126;--charcoal-2:#2B2C33}
+  html[data-theme="dark"] body{background:#121316}
+  html[data-theme="dark"] header{background:rgba(18,19,22,.86)}
+  html[data-theme="dark"] header.scrolled{box-shadow:0 10px 26px -18px rgba(0,0,0,.8)}
+  html[data-theme="dark"] .photo{background:#25262b}
+  html[data-theme="dark"] .photo-frame::after{box-shadow:0 26px 40px -14px rgba(0,0,0,.6)}
+  html[data-theme="dark"] .review figcaption small,html[data-theme="dark"] .doc .date,html[data-theme="dark"] .fields dt{color:#A9AAB1}
+  html[data-theme="dark"] .review:hover{box-shadow:0 20px 40px -24px rgba(0,0,0,.7)}
+  html[data-theme="dark"] footer .legal-links button{text-decoration-color:rgba(255,255,255,.35)}
+  html[data-theme="dark"] dialog.legal-dialog{background:#1A1B1F;box-shadow:0 40px 90px -30px rgba(0,0,0,.9)}
+  html[data-theme="dark"] dialog.legal-dialog::backdrop{background:rgba(0,0,0,.65)}
+  html[data-theme="dark"] .dlg-body{color:#D6D6DA}
+  html[data-theme="dark"] .fields{background:#232429}
+  /* плавная смена темы (включается на долю секунды при переключении) */
+  html.theme-anim *,html.theme-anim *::before,html.theme-anim *::after{transition:background-color .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease!important}
   .progress{position:fixed;top:0;left:0;right:0;height:3px;background:var(--red);transform:scaleX(0);transform-origin:left;z-index:30}
   header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.88);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);transition:box-shadow .3s}
   header.scrolled{box-shadow:0 10px 26px -18px rgba(17,17,17,.35)}
@@ -52,6 +68,16 @@
   nav a:nth-child(1){animation-delay:.1s}nav a:nth-child(2){animation-delay:.18s}nav a:nth-child(3){animation-delay:.26s}nav a:nth-child(4){animation-delay:.34s}
   nav a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform .3s var(--ease)}
   nav a:hover::after,nav a.active::after{transform:scaleX(1)}
+  .hd-right{display:flex;align-items:center;gap:6px}
+  /* переключатель темы: виден только когда работает скрипт */
+  .theme-toggle{display:none;margin-left:22px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;
+    align-items:center;justify-content:center;transition:background-color .25s,border-color .25s,transform .4s var(--ease),color .25s;animation:rise .8s var(--ease) .45s backwards;--from:translateY(-14px)}
+  html.js .theme-toggle{display:inline-flex}
+  .theme-toggle:hover,.theme-toggle:focus-visible{border-color:var(--red);color:var(--red);transform:rotate(18deg);outline:none}
+  .theme-toggle svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .theme-toggle .sun{display:none}
+  html[data-theme="dark"] .theme-toggle .sun{display:block}
+  html[data-theme="dark"] .theme-toggle .moon{display:none}
 
   /* ===== первый экран ===== */
   .hero-wrap{position:relative;overflow:hidden}
@@ -213,12 +239,18 @@
 <header id="top">
   <div class="wrap">
     <div class="mark"><i></i>Жанна Братчикова</div>
-    <nav>
-      <a href="#services">Услуги</a>
-      <a href="#about">Обо мне</a>
-      <a href="#reviews">Отзывы</a>
-      <a href="#contact">Контакты</a>
-    </nav>
+    <div class="hd-right">
+      <nav>
+        <a href="#services">Услуги</a>
+        <a href="#about">Обо мне</a>
+        <a href="#reviews">Отзывы</a>
+        <a href="#contact">Контакты</a>
+      </nav>
+      <button type="button" class="theme-toggle" id="theme" aria-pressed="false" aria-label="Включить тёмную тему" title="Тёмная тема">
+        <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+      </button>
+    </div>
   </div>
 </header>
 
